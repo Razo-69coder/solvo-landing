@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solvo — Платформа для бизнеса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --fg: #FFFFFF;
+  --muted: #86868B;
+  --border: rgba(255,255,255,0.12);
+  --accent-beauty: #FF2D78;
+  --accent-fit: #FF6B35;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --max-width: 1200px;
+  --section-pad: clamp(72px, 10vw, 120px);
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.6 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+.container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+
+::selection { background: rgba(255,255,255,0.12); color: var(--fg); }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+/* navbar */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 16px 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s;
+}
+.nav.scrolled { border-color: rgba(255,255,255,0.08); }
+.nav .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-logo {
+  font: 700 22px var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nav-links a {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: rgba(255,255,255,0.9); }
+.nav-actions { display: flex; align-items: center; gap: 12px; }
+.nav-btn {
+  font: 500 13px var(--font-body);
+  padding: 7px 18px; border-radius: 8px; border: none; cursor: pointer;
+  transition: all 0.25s;
+  background: rgba(255,255,255,0.1); color: var(--fg);
+}
+.nav-btn:hover { background: rgba(255,255,255,0.18); }
+.lang-toggle {
+  font: 500 12px var(--font-body); color: rgba(255,255,255,0.45);
+  background: none; border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px; padding: 5px 9px; cursor: pointer;
+  transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.lang-toggle:hover { color: var(--fg); border-color: rgba(255,255,255,0.35); }
+.burger {
+  display: none; flex-direction: column; gap: 5px;
+  background: none; border: none; cursor: pointer; padding: 4px;
+}
+.burger span {
+  display: block; width: 22px; height: 1.5px;
+  background: var(--fg); border-radius: 2px;
+  transition: all 0.3s;
+}
+.burger.active span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+.burger.active span:nth-child(2) { opacity: 0; }
+.burger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+
+/* mobile menu */
+.mobile-menu {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.95);
+  backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
+  z-index: 999;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 32px;
+  opacity: 0; pointer-events: none; transition: opacity 0.4s;
+}
+.mobile-menu.open { opacity: 1; pointer-events: auto; }
+.mobile-menu a { font: 600 26px var(--font-display); color: var(--fg); letter-spacing: -0.01em; }
+
+/* hero */
+.hero {
+  position: relative; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; overflow: hidden;
+  padding: 120px 24px 80px;
+  background: transparent;
+}
+#hero-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: auto; }
+.hero-content {
+  position: relative; z-index: 3; max-width: 860px; pointer-events: none;
+}
+.hero-content * { pointer-events: auto; }
+.hero-content::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 130%;
+  height: 130%;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.3) 50%, transparent 80%);
+  pointer-events: none;
+  z-index: -1;
+}
+.hero-label {
+  display: inline-block; font: 500 12px var(--font-body);
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.5); margin-bottom: 28px;
+  padding: 6px 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 100px;
+}
+.hero h1 {
+  font: 700 clamp(40px, 5.5vw, 72px) var(--font-display);
+  letter-spacing: -0.035em; line-height: 1.05; margin: 0 0 20px;
+}
+.hero-sub {
+  font-size: clamp(17px, 1.3vw, 21px); color: rgba(255,255,255,0.78);
+  line-height: 1.65; max-width: 620px; margin: 0 auto 44px;
+}
+.hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.btn-primary {
+  font: 500 16px var(--font-body); padding: 14px 32px;
+  border-radius: 980px; border: 1.5px solid rgba(255,255,255,0.25);
+  cursor: pointer; background: transparent; color: var(--fg);
+  transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-primary:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.5);
+  transform: translateY(-1px);
+}
+.btn-secondary {
+  font: 500 16px var(--font-body); padding: 14px 32px;
+  border-radius: 980px; border: 1.5px solid transparent;
+  cursor: pointer; background: transparent; color: rgba(255,255,255,0.55);
+  transition: all 0.3s; display: inline-flex; align-items: center;
+}
+.btn-secondary:hover { color: var(--fg); border-color: rgba(255,255,255,0.25); }
+.hero-fade {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 160px;
+  background: linear-gradient(to top, var(--bg), transparent);
+  z-index: 2; pointer-events: none;
+}
+@media (max-width: 768px) {
+  #hero-canvas { opacity: 0.25; }
+  .btn-primary, .btn-secondary {
+    border-radius: 10px;
+  }
+}
+
+/* metrics */
+.metrics { padding: 48px 0; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); }
+.metrics-grid { display: flex; justify-content: space-around; align-items: center; gap: 24px; text-align: center; }
+.metric-item { flex: 1; }
+.metric-value {
+  font: 700 clamp(32px,3vw,44px) var(--font-display);
+  letter-spacing: -0.025em;
+  color: var(--fg); margin-bottom: 4px;
+}
+.metric-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* sections */
+.section { padding: var(--section-pad) 0; }
+.section-header { text-align: center; margin-bottom: 64px; }
+.section-header h2 {
+  font: 700 clamp(28px,3.5vw,40px) var(--font-display);
+  letter-spacing: -0.025em; line-height: 1.15; margin: 0 0 16px;
+}
+.section-header p { font-size: 17px; color: var(--muted); max-width: 480px; margin: 0 auto; }
+
+/* about */
+.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+.about-grid h2 {
+  font: 700 clamp(24px,3vw,38px) var(--font-display);
+  letter-spacing: -0.025em; line-height: 1.2; margin: 0;
+}
+.about-grid p { font-size: 17px; color: var(--muted); line-height: 1.7; margin: 0; }
+.divider-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  margin-top: var(--section-pad);
+}
+
+/* products */
+.products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.product-card {
+  position: relative; background: var(--surface); border-radius: 18px;
+  padding: 40px 36px; border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden; transition: all 0.4s; cursor: default;
+}
+.product-card::before {
+  content: ''; position: absolute; inset: -1px;
+  border-radius: 19px; z-index: 0; opacity: 0; transition: opacity 0.4s;
+}
+.product-card:hover::before { opacity: 1; }
+.product-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.12); }
+.product-card-beauty::before { background: linear-gradient(135deg, rgba(255,45,120,0.08), transparent 60%); }
+.product-card-fit::before { background: linear-gradient(135deg, rgba(255,107,53,0.08), transparent 60%); }
+.product-card > * { position: relative; z-index: 1; }
+.product-icon {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font: 700 18px var(--font-display); margin-bottom: 20px;
+}
+.icon-beauty { background: rgba(255,45,120,0.1); color: var(--accent-beauty); border: 1px solid rgba(255,45,120,0.15); }
+.icon-fit { background: rgba(255,107,53,0.1); color: var(--accent-fit); border: 1px solid rgba(255,107,53,0.15); }
+.icon-soon { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.06); }
+.product-card h3 { font: 600 21px var(--font-display); letter-spacing: -0.01em; margin: 0 0 10px; }
+.product-card p { font-size: 15px; color: var(--muted); line-height: 1.6; margin: 0 0 20px; }
+.product-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+.product-tag {
+  font-size: 12px; padding: 3px 12px; border-radius: 100px;
+  border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); transition: all 0.2s;
+}
+.product-tag:hover { color: var(--fg); border-color: rgba(255,255,255,0.2); }
+.product-btn {
+  font: 500 14px var(--font-body); padding: 9px 22px; border-radius: 980px;
+  border: 1px solid; cursor: pointer; transition: all 0.3s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-beauty { background: transparent; color: var(--accent-beauty); border-color: rgba(255,45,120,0.25); }
+.btn-beauty:hover { background: rgba(255,45,120,0.1); border-color: rgba(255,45,120,0.4); box-shadow: 0 4px 20px rgba(255,45,120,0.08); }
+.btn-fit { background: transparent; color: var(--accent-fit); border-color: rgba(255,107,53,0.25); }
+.btn-fit:hover { background: rgba(255,107,53,0.1); border-color: rgba(255,107,53,0.4); box-shadow: 0 4px 20px rgba(255,107,53,0.08); }
+.product-card-soon { opacity: 0.35; filter: grayscale(1); }
+.product-card-soon:hover { transform: none; border-color: rgba(255,255,255,0.06); }
+.product-badge {
+  display: inline-block; font: 500 11px var(--font-body);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 3px 12px; border-radius: 100px;
+  background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); margin-bottom: 16px;
+}
+
+/* how it works */
+.steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; }
+.step-card { text-align: center; padding: 32px 24px; }
+.step-number {
+  font: 700 42px var(--font-display); letter-spacing: -0.03em;
+  color: rgba(255,255,255,0.08); margin-bottom: 16px;
+}
+.step-card h3 { font: 600 19px var(--font-display); margin: 0 0 8px; letter-spacing: -0.01em; }
+.step-card p { font-size: 15px; color: var(--muted); margin: 0 auto; max-width: 280px; }
+
+/* mission */
+.mission {
+  background: #000;
+  text-align: center; padding: clamp(80px,12vw,140px) 24px;
+  position: relative; overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.mission::before {
+  content: ''; position: absolute;
+  top: -50%; left: -50%; right: -50%; bottom: -50%;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.03), transparent 60%);
+  pointer-events: none;
+}
+.mission blockquote {
+  font: 600 clamp(22px,3vw,40px) var(--font-display);
+  letter-spacing: -0.02em; line-height: 1.25;
+  max-width: 720px; margin: 0 auto 24px; position: relative;
+}
+.mission cite { font-size: 15px; color: var(--muted); font-style: normal; position: relative; }
+
+/* footer */
+.footer { border-top: 1px solid rgba(255,255,255,0.06); padding: 64px 0 32px; }
+.footer-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+.footer h4 { font: 600 13px var(--font-display); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 16px; color: rgba(255,255,255,0.4); }
+.footer-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.footer-links a { font-size: 14px; color: var(--muted); transition: color 0.2s; }
+.footer-links a:hover { color: var(--fg); }
+.footer-logo {
+  font: 700 22px var(--font-display); letter-spacing: -0.02em;
+  color: var(--fg); margin: 0 0 8px;
+}
+.footer-desc { font-size: 14px; color: var(--muted); margin: 0 0 20px; }
+.footer-social a { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); transition: color 0.2s; }
+.footer-social a:hover { color: var(--fg); }
+.footer-bottom { border-top: 1px solid rgba(255,255,255,0.06); padding-top: 24px; text-align: center; font-size: 13px; color: rgba(255,255,255,0.3); }
+
+/* scroll animations */
+.fade-up { opacity: 0; transform: translateY(40px); transition: opacity 0.7s ease-out, transform 0.7s ease-out; }
+.fade-up.visible { opacity: 1; transform: translateY(0); }
+
+/* responsive */
+@media (max-width: 1023px) { .about-grid { gap: 48px; } .steps-grid { gap: 32px; } }
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-actions .nav-btn { display: none; }
+  .nav-actions .lang-toggle { display: none; }
+  .burger { display: flex; }
+  .hero h1 { font-size: clamp(34px,9vw,48px); }
+  .hero-sub { font-size: 16px; }
+  .hero-buttons { flex-direction: column; align-items: center; }
+  .btn-primary, .btn-secondary { width: 100%; max-width: 340px; justify-content: center; }
+  .metrics-grid { flex-direction: column; gap: 32px; }
+  .about-grid { grid-template-columns: 1fr; gap: 24px; }
+  .products-grid { grid-template-columns: 1fr; }
+  .steps-grid { grid-template-columns: 1fr; gap: 24px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 32px; text-align: center; }
+  .footer-social { justify-content: center; }
+  .section { --section-pad: clamp(48px,8vw,80px); }
+}
+@media (max-width: 480px) { .hero { padding: 100px 16px 60px; } .product-card { padding: 28px 24px; } }
+</style>
+</head>
+<body>
+
+<nav class="nav" id="navbar">
+  <div class="container">
+    <a href="#" class="nav-logo">Solvo</a>
+    <ul class="nav-links">
+      <li><a href="#products">Продукты</a></li>
+      <li><a href="#about">О нас</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="lang-toggle">RU</button>
+      <button class="nav-btn">Войти</button>
+      <button class="burger" id="burgerBtn" aria-label="Меню">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#products" class="mobile-link">Продукты</a>
+  <a href="#about" class="mobile-link">О нас</a>
+  <button class="nav-btn" style="font-size:18px;padding:12px 32px;">Войти</button>
+  <button class="lang-toggle" style="font-size:14px;">RU</button>
+</div>
+
+<section class="hero" id="hero">
+  <div id="hero-canvas"></div>
+  <div class="hero-content fade-up visible">
+    <span class="hero-label">Платформа для бизнеса</span>
+    <h1>Одна платформа.<br>Инструменты для каждой сферы.</h1>
+    <p class="hero-sub">Solvo строит простые CRM-системы под конкретный бизнес — чтобы профессионалы занимались делом, а не организацией</p>
+    <div class="hero-buttons">
+      <a href="#products" class="btn-primary">Смотреть продукты →</a>
+      <a href="#about" class="btn-secondary">О компании</a>
+    </div>
+  </div>
+  <div class="hero-fade"></div>
+</section>
+
+<section class="metrics">
+  <div class="container">
+    <div class="metrics-grid fade-up">
+      <div class="metric-item">
+        <div class="metric-value">2</div>
+        <div class="metric-label">Продукта</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">500+</div>
+        <div class="metric-label">Пользователей</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">2026</div>
+        <div class="metric-label">Год основания</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="about">
+  <div class="container">
+    <div class="about-grid fade-up">
+      <h2>Мы строим CRM-системы,<br>которые понимают<br>твой бизнес</h2>
+      <p>Каждая сфера бизнеса уникальна. Мастер красоты и персональный тренер работают по-разному — им нужны разные инструменты. Solvo создаёт отдельную систему под каждую нишу: с нужными функциями, нужным дизайном и без лишнего.</p>
+    </div>
+    <div class="divider-line"></div>
+  </div>
+</section>
+
+<section class="section" id="products">
+  <div class="container">
+    <div class="section-header fade-up">
+      <h2>Наши продукты</h2>
+      <p>Выбери систему для своей сферы</p>
+    </div>
+    <div class="products-grid">
+      <div class="product-card product-card-beauty fade-up">
+        <div class="product-icon icon-beauty">B</div>
+        <h3>Solvo Beauty</h3>
+        <p>CRM для мастеров красоты. Расписание, клиенты, напоминания — всё в одном приложении.</p>
+        <div class="product-tags">
+          <span class="product-tag">Маникюр</span>
+          <span class="product-tag">Брови</span>
+          <span class="product-tag">Ресницы</span>
+          <span class="product-tag">Косметология</span>
+        </div>
+        <button class="product-btn btn-beauty">Открыть →</button>
+      </div>
+      <div class="product-card product-card-fit fade-up">
+        <div class="product-icon icon-fit">F</div>
+        <h3>Solvo Fit</h3>
+        <p>CRM для персональных тренеров. Клиенты, тренировки, прогресс — под контролем.</p>
+        <div class="product-tags">
+          <span class="product-tag">Тренеры</span>
+          <span class="product-tag">Фитнес</span>
+          <span class="product-tag">Спорт</span>
+        </div>
+        <button class="product-btn btn-fit">Открыть →</button>
+      </div>
+      <div class="product-card product-card-soon fade-up">
+        <div class="product-icon icon-soon">?</div>
+        <span class="product-badge">Coming Soon</span>
+        <h3>Скоро</h3>
+        <p>Новая сфера в разработке</p>
+      </div>
+      <div class="product-card product-card-soon fade-up">
+        <div class="product-icon icon-soon">?</div>
+        <span class="product-badge">Coming Soon</span>
+        <h3>Скоро</h3>
+        <p>Новая сфера в разработке</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-up">
+      <h2>Просто. Быстро. Под твою сферу.</h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card fade-up">
+        <div class="step-number">01</div>
+        <h3>Выбери свою сферу</h3>
+        <p>Найди продукт Solvo, созданный специально для твоего бизнеса</p>
+      </div>
+      <div class="step-card fade-up">
+        <div class="step-number">02</div>
+        <h3>Зарегистрируйся за 2 минуты</h3>
+        <p>Минимум данных — максимум скорости. Никакого ожидания</p>
+      </div>
+      <div class="step-card fade-up">
+        <div class="step-number">03</div>
+        <h3>Работай — система делает остальное</h3>
+        <p>Автоматизация рутины, чтобы ты мог сфокусироваться на клиентах</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mission fade-up">
+  <blockquote>«Мы верим: каждый профессионал заслуживает инструмент, который понимает его работу»</blockquote>
+  <cite>— Команда Solvo</cite>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="fade-up">
+        <div class="footer-logo">Solvo</div>
+        <p class="footer-desc">Платформа для бизнеса. Простые CRM-системы под каждую сферу.</p>
+      </div>
+      <div class="fade-up">
+        <h4>Продукты</h4>
+        <ul class="footer-links">
+          <li><a href="#">Solvo Beauty</a></li>
+          <li><a href="#">Solvo Fit</a></li>
+        </ul>
+      </div>
+      <div class="fade-up">
+        <h4>Социальные сети</h4>
+        <ul class="footer-links">
+          <li><a href="#" target="_blank">@razmik.solvo</a></li>
+          <li><a href="#" target="_blank">@solvo.beauty</a></li>
+          <li><a href="#" target="_blank">@solvofit</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 Solvo. Все права защищены.</div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function() {
+
+var burger = document.getElementById('burgerBtn');
+var mobileMenu = document.getElementById('mobileMenu');
+var mobileLinks = document.querySelectorAll('.mobile-link');
+
+function toggleMenu() {
+  burger.classList.toggle('active');
+  mobileMenu.classList.toggle('open');
+  document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+}
+
+burger.addEventListener('click', toggleMenu);
+for (var i = 0; i < mobileLinks.length; i++) {
+  mobileLinks[i].addEventListener('click', toggleMenu);
+}
+
+var nav = document.getElementById('navbar');
+window.addEventListener('scroll', function() {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+var fadeEls = document.querySelectorAll('.fade-up');
+var observer = new IntersectionObserver(function(entries) {
+  for (var i = 0; i < entries.length; i++) {
+    if (entries[i].isIntersecting) {
+      entries[i].target.classList.add('visible');
+    }
+  }
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+for (var i = 0; i < fadeEls.length; i++) {
+  if (!fadeEls[i].classList.contains('visible')) observer.observe(fadeEls[i]);
+}
+
+var hero = document.getElementById('hero');
+function setHeroHeight() { hero.style.minHeight = window.innerHeight + 'px'; }
+setHeroHeight();
+window.addEventListener('resize', setHeroHeight);
+
+/* === Three.js Hero Scene === */
+var canvasContainer = document.getElementById('hero-canvas');
+if (canvasContainer && typeof THREE !== 'undefined') {
+  (function() {
+    var isMobile = window.innerWidth < 768;
+    var W = canvasContainer.clientWidth;
+    var H = canvasContainer.clientHeight;
+
+    var scene = new THREE.Scene();
+
+    var camera = new THREE.PerspectiveCamera(60, W / H, 1, 2000);
+    camera.position.set(0, 0, isMobile ? 600 : 450);
+
+    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    canvasContainer.appendChild(renderer.domElement);
+
+    var mouseX = 0, mouseY = 0;
+
+    var rect = canvasContainer.getBoundingClientRect();
+    document.addEventListener('mousemove', function(e) {
+      var r = canvasContainer.getBoundingClientRect();
+      mouseX = ((e.clientX - r.left) / r.width) * 2 - 1;
+      mouseY = -((e.clientY - r.top) / r.height) * 2 + 1;
+    });
+
+    document.addEventListener('touchmove', function(e) {
+      var t = e.touches[0];
+      var r = canvasContainer.getBoundingClientRect();
+      mouseX = ((t.clientX - r.left) / r.width) * 2 - 1;
+      mouseY = -((t.clientY - r.top) / r.height) * 2 + 1;
+    }, { passive: true });
+
+    /* ---- Bright wireframe torus knot (central form) ---- */
+    var torusGeo = new THREE.TorusKnotGeometry(100, 30, 100, 14);
+    var torusMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: isMobile ? 0.3 : 0.35,
+      wireframe: true
+    });
+    var torus = new THREE.Mesh(torusGeo, torusMat);
+    scene.add(torus);
+
+    /* ---- Ghost inner torus ---- */
+    var innerGeo = new THREE.TorusGeometry(80, 24, 48, 64);
+    var innerMat = new THREE.MeshBasicMaterial({
+      color: 0xdddddd,
+      transparent: true,
+      opacity: isMobile ? 0.12 : 0.18,
+      wireframe: false,
+      side: THREE.DoubleSide
+    });
+    var inner = new THREE.Mesh(innerGeo, innerMat);
+    scene.add(inner);
+
+    /* ---- Glow ring ---- */
+    var ringGeo = new THREE.RingGeometry(112, 130, 64);
+    var ringMat = new THREE.MeshBasicMaterial({
+      color: 0x999999,
+      transparent: true,
+      opacity: isMobile ? 0.08 : 0.12,
+      side: THREE.DoubleSide
+    });
+    var ring = new THREE.Mesh(ringGeo, ringMat);
+    scene.add(ring);
+
+    /* ---- Orbital particles ---- */
+    var orbiters = [];
+    var orbCount = isMobile ? 4 : 6;
+    for (var i = 0; i < orbCount; i++) {
+      var size = 3 + Math.random() * 5;
+      var geo = new THREE.SphereGeometry(size, 16, 16);
+      var mat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.5
+      });
+      var mesh = new THREE.Mesh(geo, mat);
+
+      var radius = 160 + Math.random() * 100;
+      mesh.userData = {
+        radius: radius,
+        angle: Math.random() * Math.PI * 2,
+        speed: 0.002 + Math.random() * 0.005,
+        yOff: (Math.random() - 0.5) * 120,
+        phase: Math.random() * Math.PI * 2
+      };
+      scene.add(mesh);
+      orbiters.push(mesh);
+    }
+
+    /* ---- Stars layer 1: bright white ---- */
+    var starCount = isMobile ? 500 : 1200;
+    var pos1 = new Float32Array(starCount * 3);
+    for (var i = 0; i < starCount; i++) {
+      pos1[i*3] = (Math.random() - 0.5) * 2400;
+      pos1[i*3+1] = (Math.random() - 0.5) * 2400;
+      pos1[i*3+2] = (Math.random() - 0.5) * 1800 - 200;
+    }
+    var g1 = new THREE.BufferGeometry();
+    g1.setAttribute('position', new THREE.BufferAttribute(pos1, 3));
+    var m1 = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: isMobile ? 1.5 : 2.0,
+      transparent: true,
+      opacity: 0.7,
+      sizeAttenuation: true
+    });
+    var stars1 = new THREE.Points(g1, m1);
+    scene.add(stars1);
+
+    /* ---- Stars layer 2: tiny distant ---- */
+    var star2Count = isMobile ? 300 : 800;
+    var pos2 = new Float32Array(star2Count * 3);
+    for (var i = 0; i < star2Count; i++) {
+      pos2[i*3] = (Math.random() - 0.5) * 3000;
+      pos2[i*3+1] = (Math.random() - 0.5) * 3000;
+      pos2[i*3+2] = (Math.random() - 0.5) * 2500 - 500;
+    }
+    var g2 = new THREE.BufferGeometry();
+    g2.setAttribute('position', new THREE.BufferAttribute(pos2, 3));
+    var m2 = new THREE.PointsMaterial({
+      color: 0xcccccc,
+      size: isMobile ? 0.8 : 1.0,
+      transparent: true,
+      opacity: 0.4,
+      sizeAttenuation: true
+    });
+    var stars2 = new THREE.Points(g2, m2);
+    scene.add(stars2);
+
+    /* ---- Drift dust particles (tiny, close) ---- */
+    var dustCount = isMobile ? 100 : 300;
+    var pos3 = new Float32Array(dustCount * 3);
+    for (var i = 0; i < dustCount; i++) {
+      pos3[i*3] = (Math.random() - 0.5) * 800;
+      pos3[i*3+1] = (Math.random() - 0.5) * 800;
+      pos3[i*3+2] = (Math.random() - 0.5) * 400;
+    }
+    var g3 = new THREE.BufferGeometry();
+    g3.setAttribute('position', new THREE.BufferAttribute(pos3, 3));
+    var m3 = new THREE.PointsMaterial({
+      color: 0x999999,
+      size: 0.6,
+      transparent: true,
+      opacity: 0.2,
+      sizeAttenuation: true
+    });
+    var dust = new THREE.Points(g3, m3);
+    scene.add(dust);
+
+    var tRotX = 0, tRotY = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      var t = Date.now() * 0.001;
+
+      torus.rotation.x += 0.003;
+      torus.rotation.y += 0.005;
+      inner.rotation.x += 0.002;
+      inner.rotation.y += 0.004;
+      ring.rotation.x += 0.001;
+      ring.rotation.y += 0.003;
+
+      for (var i = 0; i < orbiters.length; i++) {
+        var o = orbiters[i];
+        o.userData.angle += o.userData.speed;
+        o.position.x = Math.cos(o.userData.angle) * o.userData.radius;
+        o.position.z = Math.sin(o.userData.angle) * o.userData.radius * 0.6;
+        o.position.y = Math.sin(o.userData.angle * 0.7 + o.userData.phase) * o.userData.yOff;
+        var s = 1 + Math.sin(t * 1.5 + i * 1.3) * 0.2;
+        o.scale.set(s, s, s);
+      }
+
+      stars1.rotation.y += 0.0001;
+      stars2.rotation.y -= 0.00006;
+      dust.rotation.x += 0.0002;
+      dust.rotation.y += 0.0003;
+
+      tRotX += (mouseY * 0.06 - tRotX) * 0.03;
+      tRotY += (mouseX * 0.1 - tRotY) * 0.03;
+      scene.rotation.x = tRotX;
+      scene.rotation.y = tRotY;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', function() {
+      var w = canvasContainer.clientWidth;
+      var h = canvasContainer.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+  })();
+}
+})();
+</script>
+</body>
+</html>
